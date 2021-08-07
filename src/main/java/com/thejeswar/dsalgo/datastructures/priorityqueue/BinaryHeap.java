@@ -1,4 +1,4 @@
-package com.thejeswarn.algorithms.datastructures.priorityqueue;
+package com.thejeswar.dsalgo.datastructures.priorityqueue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,11 +23,12 @@ public class BinaryHeap<T extends Comparable<T>> {
 		list = new ArrayList<>(capacity);
 	}
 
-	// Construct a priority queue using heapify in O(n) time, a great explanation can be found at:
+	// Construct a priority queue using heapify in O(n) time, a great explanation
+	// can be found at:
 	// http://www.cs.umd.edu/~meesh/351/mount/lectures/lect14-heapsort-analysis-part.pdf
 	public BinaryHeap(T[] elements) {
 		this(elements.length);
-		for (int i = 0; i< elements.length;i++) {
+		for (int i = 0; i < elements.length; i++) {
 			list.add(elements[i]);
 			mapAdd(elements[i], i);
 		}
@@ -37,7 +38,8 @@ public class BinaryHeap<T extends Comparable<T>> {
 	}
 
 	public void add(T element) {
-		if(element == null) throw new IllegalArgumentException();
+		if (element == null)
+			throw new IllegalArgumentException();
 		list.add(element);
 		mapAdd(element, size() - 1);
 		heapifyUp(size() - 1);
@@ -54,25 +56,25 @@ public class BinaryHeap<T extends Comparable<T>> {
 	}
 
 	/*
-	 *  To remove the given element from the heap, in O(logN)
+	 * To remove the given element from the heap, in O(logN)
 	 */
 	public boolean remove(T element) {
 		T res = null;
-		if (element!= null && size() > 0) {
+		if (element != null && size() > 0) {
 			TreeSet<Integer> set = map.get(element);
-			if(set.size() > 0)
+			if (set != null && set.size() > 0)
 				res = removeAt(set.last());
 		}
 		return res != null;
 	}
 
 	/*
-	 *  To remove the element at the given index, in O(logN)
+	 * To remove the element at the given index, in O(logN)
 	 */
 	private T removeAt(int index) {
 		if (isEmpty())
 			return null;
-		if (index < size()-1)
+		if (index < size() - 1)
 			swap(index, size() - 1);
 		T element = list.get(size() - 1);
 		list.remove(size() - 1);
@@ -95,9 +97,9 @@ public class BinaryHeap<T extends Comparable<T>> {
 	private void heapifyUp(int k) {
 		int parent;
 		while (true) {
-			parent = parentIndex(k);
-			if (parent <= 0)
+			if (k <= 0)
 				break;
+			parent = parentIndex(k);
 			if (less(k, parent))
 				swap(parent, k);
 			k = parent;
@@ -129,12 +131,12 @@ public class BinaryHeap<T extends Comparable<T>> {
 	}
 
 	private void swap(int indxOne, int indxTwo) {
-		mapSwap(list.get(indxOne), list.get(indxTwo),indxOne, indxTwo);
+		mapSwap(list.get(indxOne), list.get(indxTwo), indxOne, indxTwo);
 		T temp = list.get(indxOne);
 		list.set(indxOne, list.get(indxTwo));
 		list.set(indxTwo, temp);
 	}
-	
+
 	private int parentIndex(int k) {
 		return (k - 1) / 2;
 	}
@@ -157,11 +159,11 @@ public class BinaryHeap<T extends Comparable<T>> {
 
 	private void mapAdd(T element, int index) {
 		TreeSet<Integer> set = map.get(element);
-		if(set == null) {
+		if (set == null) {
 			set = new TreeSet<Integer>();
 			set.add(index);
 			map.put(element, set);
-		} else 
+		} else
 			set.add(index);
 	}
 
@@ -174,14 +176,32 @@ public class BinaryHeap<T extends Comparable<T>> {
 		twoSet.add(val1Indx);
 	}
 
+	static class Node implements Comparable<Node> {
+		int id;
+		int value;
+
+		public Node(int id, int value) {
+			this.id = id;
+			this.value = value;
+		}
+
+		@Override
+		public int compareTo(Node node) {
+			return value - node.value;
+		}
+	}
+
 	/* For testing */
 	public static void main(String[] args) {
-		Integer[] elements = { 5, 4, 2, 1, 54, 21, 3, 9 };
-		BinaryHeap<Integer> heap = new BinaryHeap<Integer>(elements);
-		heap.add(3);
-		heap.remove(21);
+		BinaryHeap<Node> heap = new BinaryHeap<>();
+		heap.add(new Node(0, 5));
+		heap.add(new Node(1, 2));
+		heap.add(new Node(2, 3));
+		heap.add(new Node(3, 1));
+		heap.add(new Node(4, 7));
+		heap.add(new Node(5, 2));
 		while (!heap.isEmpty()) {
-			System.out.println(heap.poll());
+			System.out.println(heap.poll().value);
 		}
 	}
 }
