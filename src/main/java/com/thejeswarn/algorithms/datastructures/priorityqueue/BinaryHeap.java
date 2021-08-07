@@ -1,29 +1,89 @@
 package com.thejeswarn.algorithms.datastructures.priorityqueue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
+/*
+ * Binary Min Heap implementation
+ */
 public class BinaryHeap<T extends Comparable<T>> {
+
 	private List<T> list;
+
+	private Map<T, TreeSet<Integer>> map = new HashMap<>();
 
 	public BinaryHeap() {
 		this(1);
 	}
 
 	public BinaryHeap(int capacity) {
-		list = new ArrayList<T>(capacity);
+		list = new ArrayList<>(capacity);
 	}
 
+	// Construct a priority queue using heapify in O(n) time, a great explanation can be found at:
+	// http://www.cs.umd.edu/~meesh/351/mount/lectures/lect14-heapsort-analysis-part.pdf
 	public BinaryHeap(T[] elements) {
 		this(elements.length);
-		for (T element : elements) {
-			list.add(element);
+		for (int i = 0; i< elements.length;i++) {
+			list.add(elements[i]);
+			mapAdd(elements[i], i);
 		}
-		for (int i = Math.max(0, (size() / 2) - 1); i >= 0; i--) {
+		// Heapify process, O(n)
+		for (int i = Math.max(0, (size() / 2) - 1); i >= 0; i--)
 			heapifyDown(i);
-		}
 	}
-	
+
+	public void add(T element) {
+		if(element == null) throw new IllegalArgumentException();
+		list.add(element);
+		mapAdd(element, size() - 1);
+		heapifyUp(size() - 1);
+	}
+
+	public T peek() {
+		if (isEmpty())
+			return null;
+		return list.get(0);
+	}
+
+	public T poll() {
+		return removeAt(0);
+	}
+
+	/*
+	 *  To remove the given element from the heap, in O(logN)
+	 */
+	public boolean remove(T element) {
+		T res = null;
+		if (element!= null && size() > 0) {
+			TreeSet<Integer> set = map.get(element);
+			if(set.size() > 0)
+				res = removeAt(set.last());
+		}
+		return res != null;
+	}
+
+	/*
+	 *  To remove the element at the given index, in O(logN)
+	 */
+	private T removeAt(int index) {
+		if (isEmpty())
+			return null;
+		if (index < size()-1)
+			swap(index, size() - 1);
+		T element = list.get(size() - 1);
+		list.remove(size() - 1);
+		mapRemove(element, size());
+		if (index < size())
+			heapifyDown(index);
+		if (index > 0)
+			heapifyUp(index);
+		return element;
+	}
+
 	private int size() {
 		return list.size();
 	}
@@ -38,66 +98,43 @@ public class BinaryHeap<T extends Comparable<T>> {
 			parent = parentIndex(k);
 			if (parent <= 0)
 				break;
-			if (less(k, parent)) {
+			if (less(k, parent))
 				swap(parent, k);
-			}
 			k = parent;
 		}
 	}
 
-	private void heapifyDown(int k) {
-		int rightChildIndex;
-		int leftChildIndex;
-		int swapIndex;
+	private void heapifyDown(int index) {
 		while (true) {
-			rightChildIndex = rightChildIndex(k);
-			leftChildIndex = leftChildIndex(k);
+			int rightChildIndex = rightChildIndex(index);
+			int leftChildIndex = leftChildIndex(index);
+			// If the leftChildIndex is outside the range of heap
 			if (leftChildIndex >= size())
 				break;
-			swapIndex = leftChildIndex;
-			if (rightChildIndex < size() && less(rightChildIndex, leftChildIndex)) {
+			// Assume, the left is the smallest node
+			int swapIndex = leftChildIndex;
+			// Find the smallest one and correct the swapIndex
+			if (rightChildIndex < size() && less(rightChildIndex, leftChildIndex))
 				swapIndex = rightChildIndex;
-			}
-			if (less(swapIndex, k)) {
-				swap(swapIndex, k);
-			}
-			k = swapIndex;
+			// If we cann't sink index anymore
+			if (less(index, swapIndex))
+				break;
+			swap(swapIndex, index);
+			index = swapIndex;
 		}
 	}
 
-	private boolean less(int i, int j) {
-		if (list.get(i).compareTo(list.get(j)) < 0)
-			return true;
-		return false;
+	private boolean less(int indxOne, int indxTwo) {
+		return list.get(indxOne).compareTo(list.get(indxTwo)) < 0;
 	}
 
-	private void swap(int i, int j) {
-		T temp = list.get(i);
-		list.set(i, list.get(j));
-		list.set(j, temp);
+	private void swap(int indxOne, int indxTwo) {
+		mapSwap(list.get(indxOne), list.get(indxTwo),indxOne, indxTwo);
+		T temp = list.get(indxOne);
+		list.set(indxOne, list.get(indxTwo));
+		list.set(indxTwo, temp);
 	}
-
-	public void add(T element) {
-		list.add(element);
-		heapifyUp(size() - 1);
-	}
-
-	public T peek() {
-		if (isEmpty())
-			return null;
-		return list.get(0);
-	}
-
-	public T poll() {
-		if (isEmpty())
-			return null;
-		T res = list.get(0);
-		swap(0, size() - 1);
-		list.remove(size() - 1);
-		heapifyDown(0);
-		return res;
-	}
-
+	
 	private int parentIndex(int k) {
 		return (k - 1) / 2;
 	}
@@ -108,5 +145,43 @@ public class BinaryHeap<T extends Comparable<T>> {
 
 	private int rightChildIndex(int k) {
 		return 2 * k + 2;
+	}
+
+	private void mapRemove(T element, int index) {
+		TreeSet<Integer> set = map.get(element);
+		if (set.size() <= 1)
+			map.remove(element);
+		else
+			set.remove(index);
+	}
+
+	private void mapAdd(T element, int index) {
+		TreeSet<Integer> set = map.get(element);
+		if(set == null) {
+			set = new TreeSet<Integer>();
+			set.add(index);
+			map.put(element, set);
+		} else 
+			set.add(index);
+	}
+
+	private void mapSwap(T val1, T val2, int val1Indx, int val2Indx) {
+		TreeSet<Integer> oneSet = map.get(val1);
+		TreeSet<Integer> twoSet = map.get(val2);
+		oneSet.remove(val1Indx);
+		twoSet.remove(val2Indx);
+		oneSet.add(val2Indx);
+		twoSet.add(val1Indx);
+	}
+
+	/* For testing */
+	public static void main(String[] args) {
+		Integer[] elements = { 5, 4, 2, 1, 54, 21, 3, 9 };
+		BinaryHeap<Integer> heap = new BinaryHeap<Integer>(elements);
+		heap.add(3);
+		heap.remove(21);
+		while (!heap.isEmpty()) {
+			System.out.println(heap.poll());
+		}
 	}
 }
