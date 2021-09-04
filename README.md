@@ -7,3 +7,4 @@ A collection of algorithms and data structures
 
 #### Algorithms
 - [Dijkstra's shortest path](src/main/java/com/thejeswar/dsalgo/algorithms/graphtheory/DijkstrasShortestPath.java)
+- [Topological Sort (Adjacency List)](src/main/java/com/thejeswar/dsalgo/algorithms/graphtheory/TopologicalSort.java)
